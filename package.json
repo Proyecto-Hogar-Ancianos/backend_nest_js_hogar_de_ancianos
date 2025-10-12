@@ -69,4 +69,11 @@
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.9.3"
   }
+  ,
+  "scripts": {
+  "start": "nest start",
+  "start:dev": "nest start --watch",
+  "start:prod": "node dist/main.js",
+  "test:e2e": "jest --config ./test/jest-e2e.json"
+  }
 }
