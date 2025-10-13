@@ -23,7 +23,7 @@ export class CreateUserDto {
 
 	@ApiProperty({ example: 'juan@example.com' })
 	@IsEmail()
-	u_email: string;
+	email: string;
 
 	@ApiProperty({ description: "Plain text password for creation (will be hashed)", example: 'secret' })
 	@IsNotEmpty()

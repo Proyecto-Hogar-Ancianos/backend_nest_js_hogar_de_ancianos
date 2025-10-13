@@ -17,6 +17,9 @@ export class UsersService {
 	}
 
 	async create(data: Partial<User>): Promise<User> {
+		if (!data.identification || data.identification.trim() === '') {
+			throw new Error('La identificación es requerida');
+		}
 		return this.userRepository.create(data);
 	}
 
