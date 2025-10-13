@@ -766,7 +766,7 @@ if (!access_token && pm.info.requestName !== "Login") {
 
 ---
 
-## ✅ Endpoints Completados
+##   Endpoints Completados
 
 | Método | Endpoint | Descripción | Auth Requerido |
 |--------|----------|-------------|----------------|

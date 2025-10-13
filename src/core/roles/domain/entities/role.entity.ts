@@ -9,8 +9,8 @@ export class Role {
 	@Column({ name: 'r_name' })
 	name: string;
 
-	// permissions relation is optional, mapped when implemented
-	@OneToMany(() => Permission, p => p.role)
-	permissions?: Permission[];
+
+	//@OneToMany(() => Permission, p => p.role)
+	//permissions?: Permission[];
 }
 

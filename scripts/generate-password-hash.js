@@ -1,75 +1,95 @@
 /**
- * Script para generar hash de contraseña para usuarios de prueba
- * 
- * Uso:
- * 1. Instala bcrypt: npm install bcrypt
- * 2. Ejecuta: node scripts/generate-password-hash.js
+ * Script para crear super usuarios predeterminados al iniciar la app
  */
 
 const bcrypt = require('bcrypt');
-const readline = require('readline');
+const mysql = require('mysql2/promise');
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-});
+const superUsers = [
+  {
+    u_identification: '604700548',
+    u_name: 'Antony',
+    u_f_last_name: 'Monge',
+    u_s_last_name: 'Lopez',
+    u_email: 'antony.mongelopez@ucr.ac.cr',
+    password: 'tonyml123',
+    role_id: 1
+  },
+  {
+    u_identification: 'C35380',
+    u_name: 'Jonathan',
+    u_f_last_name: 'Moreno',
+    u_s_last_name: 'Fajardo',
+    u_email: 'jonathanfajardo406@gmail.com',
+    password: 'jona123',
+    role_id: 1
+  },
+  {
+    u_identification: 'C36589',
+    u_name: 'Luis',
+    u_f_last_name: 'Rivera',
+    u_s_last_name: 'Lopez',
+    u_email: 'luis.riveralopez@ucr.ac.cr',
+    password: 'luis123',
+    role_id: 1
+  }
+];
 
-console.log('===========================================');
-console.log('  GENERADOR DE HASH DE CONTRASEÑA');
-console.log('===========================================\n');
+const dbConfig = {
+  host: 'localhost',
+  user: 'root',
+  password: '',
+  database: 'hogar_de_ancianos'
+};
 
-rl.question('Ingresa la contraseña a hashear: ', async (password) => {
-  if (!password || password.length < 6) {
-    console.error('\n❌ Error: La contraseña debe tener al menos 6 caracteres');
-    rl.close();
-    return;
+async function createSuperUsers() {
+  const connection = await mysql.createConnection(dbConfig);
+
+  for (const user of superUsers) {
+    // Verificar si el usuario ya existe
+    const [rows] = await connection.execute(
+      'SELECT id FROM users WHERE u_identification = ? OR u_email = ?',
+      [user.u_identification, user.u_email]
+    );
+
+    if (rows.length > 0) {
+      console.log(`👤 Usuario ${user.u_name} ya existe en la DB, saltando...`);
+      continue;
+    }
+
+    // Generar hash de contraseña
+    const hash = await bcrypt.hash(user.password, 10);
+
+    // Insertar en la DB
+    const insertQuery = `
+      INSERT INTO users (
+        u_identification,
+        u_name,
+        u_f_last_name,
+        u_s_last_name,
+        u_email,
+        u_password,
+        u_is_active,
+        role_id
+      ) VALUES (?, ?, ?, ?, ?, ?, TRUE, ?)
+    `;
+
+    await connection.execute(insertQuery, [
+      user.u_identification,
+      user.u_name,
+      user.u_f_last_name,
+      user.u_s_last_name,
+      user.u_email,
+      hash,
+      user.role_id
+    ]);
+
+    console.log(`  Super usuario ${user.u_name} creado exitosamente`);
   }
 
-  try {
-    console.log('\n⏳ Generando hash...\n');
-    
-    const saltRounds = 10;
-    const hash = await bcrypt.hash(password, saltRounds);
-    
-    console.log('✅ Hash generado exitosamente!\n');
-    console.log('===========================================');
-    console.log('Contraseña original:', password);
-    console.log('Hash bcrypt:', hash);
-    console.log('===========================================\n');
-    console.log('📋 Copia el hash de arriba y úsalo en tu INSERT SQL:\n');
-    console.log(`INSERT INTO users (
-  u_identification, 
-  u_name, 
-  u_f_last_name, 
-  u_s_last_name, 
-  u_email, 
-  u_password, 
-  u_is_active, 
-  role_id
-) VALUES (
-  '123456789',
-  'Juan',
-  'Pérez',
-  'González',
-  'admin@hogar.com',
-  '${hash}',
-  TRUE,
-  1
-);`);
-    console.log('\n===========================================\n');
-    
-    // Verificar el hash
-    const isValid = await bcrypt.compare(password, hash);
-    console.log('✅ Verificación del hash:', isValid ? 'CORRECTA' : 'INCORRECTA');
-    
-  } catch (error) {
-    console.error('\n❌ Error al generar hash:', error.message);
-  }
-  
-  rl.close();
-});
+  await connection.end();
+}
 
-rl.on('close', () => {
-  console.log('\n👋 ¡Hasta luego!\n');
-  process.exit(0);
-});
+createSuperUsers()
+  .then(() => console.log('\n🎉 Proceso completado'))
+  .catch(err => console.error('❌ Error:', err));
