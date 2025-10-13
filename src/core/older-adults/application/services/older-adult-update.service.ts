@@ -1,0 +1,22 @@
+import { Injectable } from '@nestjs/common';
+import { OlderAdultUpdateRepository } from '../../domain/repositories/older-adult-update.repository.interface';
+import { OlderAdultUpdate } from '../../domain/entities/older-adult-update.entity';
+
+@Injectable()
+export class OlderAdultUpdateService {
+  constructor(
+    private readonly olderAdultUpdateRepository: OlderAdultUpdateRepository
+  ) {}
+
+  async findAll(): Promise<OlderAdultUpdate[]> {
+    return this.olderAdultUpdateRepository.findAll();
+  }
+
+  async findByOlderAdult(olderAdultId: number): Promise<OlderAdultUpdate[]> {
+    return this.olderAdultUpdateRepository.findByOlderAdult(olderAdultId);
+  }
+
+  async create(update: Partial<OlderAdultUpdate>): Promise<OlderAdultUpdate> {
+    return this.olderAdultUpdateRepository.create(update);
+  }
+}

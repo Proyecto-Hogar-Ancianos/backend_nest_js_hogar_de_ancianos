@@ -237,7 +237,7 @@ src/
 │   ├── users/                   # Gestión de usuarios
 │   ├── roles/                   # Roles y permisos
 │   ├── older-adults/            # Adultos mayores
-│   ├── medical-records/         # Historiales médicos
+│   ├── medical-records/         # Historiales médicos (Ficha virtual)
 │   ├── appointments/            # Citas especializadas
 │   ├── programs/                # Programas del hogar
 │   ├── audit/                   # Auditoría y logs
