@@ -36,10 +36,10 @@ export class User {
 	@Column({ name: 'create_at', type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
 	createAt: Date;
 
-		@Column({ name: 'role_id', nullable: true })
-		roleId?: number;
+	@Column({ name: 'role_id', nullable: true })
+	roleId?: number;
 
-		@ManyToOne(() => Role, role => (role as any).permissions, { nullable: true })
-		@JoinColumn({ name: 'role_id' })
-		role?: Role;
+	@ManyToOne(() => Role, role => (role as any).permissions, { nullable: true })
+	@JoinColumn({ name: 'role_id' })
+	role?: Role;
 }

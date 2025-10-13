@@ -1,13 +1,18 @@
-import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards } from '@nestjs/common';
 import { UsersService } from '../../application/services/users.service';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { UserResponseDto } from '../dto/user-response.dto';
 import { toUserResponse, toUserResponseList } from '../mappers/user.mapper';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../../../../common/guards/jwt-auth.guard';
+import { Roles } from '../../../../common/decorators/roles.decorator';
+import { RolesGuard } from '../../../../common/guards/roles.guard';
 
 @ApiTags('users')
+@ApiBearerAuth()
 @Controller('users')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
 	constructor(private readonly usersService: UsersService) {}
 
@@ -28,6 +33,7 @@ export class UsersController {
 	}
 
 	@Post()
+	@Roles('super admin', 'admin')
 	@ApiOperation({ summary: 'Create a user' })
 	@ApiResponse({ status: 201, description: 'User created', type: UserResponseDto })
 	async create(@Body() dto: CreateUserDto): Promise<UserResponseDto> {
@@ -36,6 +42,7 @@ export class UsersController {
 	}
 
 	@Put(':id')
+	@Roles('super admin', 'admin')
 	@ApiOperation({ summary: 'Update a user' })
 	@ApiResponse({ status: 200, description: 'User updated', type: UserResponseDto })
 	async update(@Param('id') id: number, @Body() dto: UpdateUserDto): Promise<UserResponseDto> {
@@ -44,6 +51,7 @@ export class UsersController {
 	}
 
 	@Delete(':id')
+	@Roles('super admin')
 	@ApiOperation({ summary: 'Delete a user' })
 	@ApiResponse({ status: 200, description: 'User deleted' })
 	async delete(@Param('id') id: number): Promise<void> {
