@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ClinicalMedication } from '../../domain/entities/clinical-medication.entity';
-import { ClinicalMedicationRepository } from '../../domain/repositories/clinical-medication.repository.interface';
+import type { ClinicalMedicationRepository } from '../../domain/repositories/clinical-medication.repository.interface';
 
 @Injectable()
 export class TypeOrmClinicalMedicationRepository implements ClinicalMedicationRepository {

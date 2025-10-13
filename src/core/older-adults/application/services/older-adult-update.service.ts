@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { OlderAdultUpdateRepository } from '../../domain/repositories/older-adult-update.repository.interface';
+import { TypeOrmOlderAdultUpdateRepository } from '../../infrastructure/repositories/older-adult-update.repository';
 import { OlderAdultUpdate } from '../../domain/entities/older-adult-update.entity';
 
 @Injectable()
 export class OlderAdultUpdateService {
   constructor(
-    private readonly olderAdultUpdateRepository: OlderAdultUpdateRepository
+    private readonly olderAdultUpdateRepository: TypeOrmOlderAdultUpdateRepository
   ) {}
 
   async findAll(): Promise<OlderAdultUpdate[]> {

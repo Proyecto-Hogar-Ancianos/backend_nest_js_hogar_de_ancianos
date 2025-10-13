@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EmergencyContact } from '../../domain/entities/emergency-contact.entity';
-import { EmergencyContactRepository } from '../../domain/repositories/emergency-contact.repository.interface';
+import type { EmergencyContactRepository } from '../../domain/repositories/emergency-contact.repository.interface';
 
 @Injectable()
 export class TypeOrmEmergencyContactRepository implements EmergencyContactRepository {

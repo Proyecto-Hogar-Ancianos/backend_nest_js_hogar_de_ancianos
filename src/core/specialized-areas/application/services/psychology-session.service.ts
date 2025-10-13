@@ -4,7 +4,7 @@ import { PsychologySession } from '../../domain/entities/psychology-session.enti
 
 @Injectable()
 export class PsychologySessionService {
-  constructor(private readonly psychologyRepository: TypeOrmPsychologySessionRepository) {}
+  constructor(private readonly psychologyRepository: TypeOrmPsychologySessionRepository) { }
 
   async getAll(): Promise<PsychologySession[]> {
     return this.psychologyRepository.findAll();

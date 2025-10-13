@@ -1,9 +1,9 @@
 import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common';
-import { PsychologySessionService } from './psychology-session.service';
+import { PsychologySessionService } from '../services/psychology-session.service';
 
 @Controller('psychology-sessions')
 export class PsychologySessionController {
-  constructor(private readonly psychologySessionService: PsychologySessionService) {}
+  constructor(private readonly psychologySessionService: PsychologySessionService) { }
 
   @Get()
   getAll() {

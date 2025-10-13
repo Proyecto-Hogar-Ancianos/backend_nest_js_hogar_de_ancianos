@@ -10,8 +10,8 @@ import { UsersController } from './infrastructure/controllers/users.controller';
   controllers: [UsersController],
   providers: [
     UsersService,
-    { provide: 'UserRepository', useClass: TypeOrmUserRepository }
+    TypeOrmUserRepository
   ],
-  exports: [UsersService],
+  exports: [UsersService, TypeOrmUserRepository],
 })
-export class UsersModule {}
+export class UsersModule { }

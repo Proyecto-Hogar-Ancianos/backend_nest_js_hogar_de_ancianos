@@ -4,7 +4,7 @@ import { NursingRecord } from '../../domain/entities/nursing-record.entity';
 
 @Injectable()
 export class NursingRecordService {
-  constructor(private readonly nursingRecordRepository: TypeOrmNursingRecordRepository) {}
+  constructor(private readonly nursingRecordRepository: TypeOrmNursingRecordRepository) { }
 
   async getAll(): Promise<NursingRecord[]> {
     return this.nursingRecordRepository.findAll();

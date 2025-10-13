@@ -4,7 +4,7 @@ import { SpecializedArea } from '../../domain/entities/specialized-area.entity';
 
 @Injectable()
 export class SpecializedAreaService {
-  constructor(private readonly areaRepository: TypeOrmSpecializedAreaRepository) {}
+  constructor(private readonly areaRepository: TypeOrmSpecializedAreaRepository) { }
 
   async getAll(): Promise<SpecializedArea[]> {
     return this.areaRepository.findAll();

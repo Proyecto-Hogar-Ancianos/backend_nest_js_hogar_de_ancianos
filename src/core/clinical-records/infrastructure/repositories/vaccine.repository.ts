@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Vaccine } from '../../domain/entities/vaccine.entity';
-import { VaccineRepository } from '../../domain/repositories/vaccine.repository.interface';
+import type { VaccineRepository } from '../../domain/repositories/vaccine.repository.interface';
 
 @Injectable()
 export class TypeOrmVaccineRepository implements VaccineRepository {

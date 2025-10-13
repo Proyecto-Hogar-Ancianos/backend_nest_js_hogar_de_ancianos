@@ -14,20 +14,17 @@ import { TypeOrmPsychologySessionRepository } from './infrastructure/repositorie
 import { TypeOrmSocialWorkReportRepository } from './infrastructure/repositories/social-work-report.repository';
 
 // Controllers
-import { SpecializedAreaController } from './infrastructure/controllers/specialized-area.controller';
-import { SpecializedAppointmentController } from './infrastructure/controllers/specialized-appointment.controller';
-import { NursingRecordController } from './infrastructure/controllers/nursing-record.controller';
-import { PhysiotherapySessionController } from './infrastructure/controllers/physiotherapy-session.controller';
-import { PsychologySessionController } from './infrastructure/controllers/psychology-session.controller';
-import { SocialWorkReportController } from './infrastructure/controllers/social-work-report.controller';
+
+
+import { PsychologySessionController } from './application/controllers/psychology-session.controller';
+
 
 // Application services
 import { SpecializedAreaService } from './application/services/specialized-area.service';
-import { SpecializedAppointmentService } from './application/services/specialized-appointment.service';
+
 import { NursingRecordService } from './application/services/nursing-record.service';
-import { PhysiotherapySessionService } from './application/services/physiotherapy-session.service';
+
 import { PsychologySessionService } from './application/services/psychology-session.service';
-import { SocialWorkReportService } from './application/services/social-work-report.service';
 
 @Module({
   imports: [
@@ -41,21 +38,18 @@ import { SocialWorkReportService } from './application/services/social-work-repo
     ]),
   ],
   controllers: [
-    SpecializedAreaController,
-    SpecializedAppointmentController,
-    NursingRecordController,
-    PhysiotherapySessionController,
-    PsychologySessionController,
-    SocialWorkReportController,
+
+    PsychologySessionController
+
   ],
   providers: [
     // application services
     SpecializedAreaService,
-    SpecializedAppointmentService,
+
     NursingRecordService,
-    PhysiotherapySessionService,
+
     PsychologySessionService,
-    SocialWorkReportService,
+
     // repositories
     TypeOrmSpecializedAreaRepository,
     TypeOrmSpecializedAppointmentRepository,
@@ -73,4 +67,4 @@ import { SocialWorkReportService } from './application/services/social-work-repo
     TypeOrmSocialWorkReportRepository,
   ],
 })
-export class SpecializedAreasModule {}
+export class SpecializedAreasModule { }

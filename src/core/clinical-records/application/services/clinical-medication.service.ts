@@ -1,11 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { ClinicalMedicationRepository } from '../../domain/repositories/clinical-medication.repository.interface';
+import { TypeOrmClinicalMedicationRepository } from '../../infrastructure/repositories/clinical-medication.repository';
 import { ClinicalMedication } from '../../domain/entities/clinical-medication.entity';
 
 @Injectable()
 export class ClinicalMedicationService {
   constructor(
-    private readonly clinicalMedicationRepository: ClinicalMedicationRepository
+    private readonly clinicalMedicationRepository: TypeOrmClinicalMedicationRepository
   ) {}
 
   async findAll(): Promise<ClinicalMedication[]> {

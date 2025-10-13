@@ -41,32 +41,27 @@ import { TypeOrmClinicalMedicationRepository } from './infrastructure/repositori
     ClinicalMedicationController
   ],
   providers: [
+    // Services
     ClinicalConditionService,
     VaccineService,
     ClinicalHistoryService,
     ClinicalMedicationService,
-    {
-      provide: 'ClinicalConditionRepository',
-      useClass: TypeOrmClinicalConditionRepository
-    },
-    {
-      provide: 'VaccineRepository',
-      useClass: TypeOrmVaccineRepository
-    },
-    {
-      provide: 'ClinicalHistoryRepository',
-      useClass: TypeOrmClinicalHistoryRepository
-    },
-    {
-      provide: 'ClinicalMedicationRepository',
-      useClass: TypeOrmClinicalMedicationRepository
-    }
+    
+    // Repositories
+    TypeOrmClinicalConditionRepository,
+    TypeOrmVaccineRepository,
+    TypeOrmClinicalHistoryRepository,
+    TypeOrmClinicalMedicationRepository
   ],
   exports: [
     ClinicalConditionService,
     VaccineService,
     ClinicalHistoryService,
-    ClinicalMedicationService
+    ClinicalMedicationService,
+    TypeOrmClinicalConditionRepository,
+    TypeOrmVaccineRepository,
+    TypeOrmClinicalHistoryRepository,
+    TypeOrmClinicalMedicationRepository
   ]
 })
 export class ClinicalRecordsModule {}

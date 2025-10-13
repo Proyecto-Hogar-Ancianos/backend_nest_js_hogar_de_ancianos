@@ -1,13 +1,12 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { UserRepository } from '../../domain/repositories/user.repository.interface';
+import { Injectable } from '@nestjs/common';
+import { TypeOrmUserRepository } from '../../infrastructure/repositories/user.repository';
 import { User } from '../../domain/entities/user.entity';
 
 @Injectable()
 export class UsersService {
 	constructor(
-		@Inject('UserRepository')
-		private readonly userRepository: UserRepository
-	) {}
+		private readonly userRepository: TypeOrmUserRepository
+	) { }
 
 	async findAll(): Promise<User[]> {
 		return this.userRepository.findAll();

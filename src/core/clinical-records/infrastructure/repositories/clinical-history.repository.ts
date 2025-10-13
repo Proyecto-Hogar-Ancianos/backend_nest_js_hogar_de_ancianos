@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ClinicalHistory } from '../../domain/entities/clinical-history.entity';
-import { ClinicalHistoryRepository } from '../../domain/repositories/clinical-history.repository.interface';
+import type { ClinicalHistoryRepository } from '../../domain/repositories/clinical-history.repository.interface';
 import { ClinicalCondition } from '../../domain/entities/clinical-condition.entity';
 import { Vaccine } from '../../domain/entities/vaccine.entity';
 

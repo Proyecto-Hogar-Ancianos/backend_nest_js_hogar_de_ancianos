@@ -34,28 +34,17 @@ import { EmergencyContactController } from './application/controllers/emergency-
     ])
   ],
   providers: [
-    // Repositories
-    {
-      provide: 'OlderAdultRepository',
-      useClass: TypeOrmOlderAdultRepository
-    },
-    {
-      provide: 'OlderAdultFamilyRepository',
-      useClass: TypeOrmOlderAdultFamilyRepository
-    },
-    {
-      provide: 'EmergencyContactRepository',
-      useClass: TypeOrmEmergencyContactRepository
-    },
-    {
-      provide: 'OlderAdultUpdateRepository',
-      useClass: TypeOrmOlderAdultUpdateRepository
-    },
     // Services
     OlderAdultService,
     OlderAdultFamilyService,
     EmergencyContactService,
-    OlderAdultUpdateService
+    OlderAdultUpdateService,
+    
+    // Repositories
+    TypeOrmOlderAdultRepository,
+    TypeOrmOlderAdultFamilyRepository,
+    TypeOrmEmergencyContactRepository,
+    TypeOrmOlderAdultUpdateRepository
   ],
   controllers: [
     OlderAdultController,
@@ -66,7 +55,11 @@ import { EmergencyContactController } from './application/controllers/emergency-
     OlderAdultService,
     OlderAdultFamilyService,
     EmergencyContactService,
-    OlderAdultUpdateService
+    OlderAdultUpdateService,
+    TypeOrmOlderAdultRepository,
+    TypeOrmOlderAdultFamilyRepository,
+    TypeOrmEmergencyContactRepository,
+    TypeOrmOlderAdultUpdateRepository
   ]
 })
 export class OlderAdultsModule {}

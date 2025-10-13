@@ -1,11 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { EmergencyContactRepository } from '../../domain/repositories/emergency-contact.repository.interface';
+import { TypeOrmEmergencyContactRepository } from '../../infrastructure/repositories/emergency-contact.repository';
 import { EmergencyContact } from '../../domain/entities/emergency-contact.entity';
 
 @Injectable()
 export class EmergencyContactService {
   constructor(
-    private readonly emergencyContactRepository: EmergencyContactRepository
+    private readonly emergencyContactRepository: TypeOrmEmergencyContactRepository
   ) {}
 
   async findAll(): Promise<EmergencyContact[]> {

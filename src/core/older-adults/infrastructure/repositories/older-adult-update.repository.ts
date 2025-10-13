@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { OlderAdultUpdate } from '../../domain/entities/older-adult-update.entity';
-import { OlderAdultUpdateRepository } from '../../domain/repositories/older-adult-update.repository.interface';
+import type { OlderAdultUpdateRepository } from '../../domain/repositories/older-adult-update.repository.interface';
 
 @Injectable()
 export class TypeOrmOlderAdultUpdateRepository implements OlderAdultUpdateRepository {

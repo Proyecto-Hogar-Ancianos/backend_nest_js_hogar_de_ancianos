@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { ClinicalHistoryRepository } from '../../domain/repositories/clinical-history.repository.interface';
+import { TypeOrmClinicalHistoryRepository } from '../../infrastructure/repositories/clinical-history.repository';
 import { ClinicalHistory } from '../../domain/entities/clinical-history.entity';
 import { ClinicalCondition } from '../../domain/entities/clinical-condition.entity';
 import { Vaccine } from '../../domain/entities/vaccine.entity';
@@ -7,7 +7,7 @@ import { Vaccine } from '../../domain/entities/vaccine.entity';
 @Injectable()
 export class ClinicalHistoryService {
   constructor(
-    private readonly clinicalHistoryRepository: ClinicalHistoryRepository
+    private readonly clinicalHistoryRepository: TypeOrmClinicalHistoryRepository
   ) {}
 
   async findAll(): Promise<ClinicalHistory[]> {

@@ -1,11 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { OlderAdultRepository } from '../../domain/repositories/older-adult.repository.interface';
+import { TypeOrmOlderAdultRepository } from '../../infrastructure/repositories/older-adult.repository';
 import { OlderAdult } from '../../domain/entities/older-adult.entity';
 
 @Injectable()
 export class OlderAdultService {
   constructor(
-    private readonly olderAdultRepository: OlderAdultRepository
+    private readonly olderAdultRepository: TypeOrmOlderAdultRepository
   ) {}
 
   async findAll(): Promise<OlderAdult[]> {
