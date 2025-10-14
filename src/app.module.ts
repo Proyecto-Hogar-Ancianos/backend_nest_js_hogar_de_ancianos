@@ -20,6 +20,8 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 
 // Entities for Guard
 import { UserSession } from './core/auth/domain/entities/user-session.entity';
+import { User } from './core/users/domain/entities/user.entity';
+import { DataSource } from 'typeorm';
 
 @Module({
   imports: [
@@ -40,6 +42,11 @@ import { UserSession } from './core/auth/domain/entities/user-session.entity';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: 'UserRepository',
+      useFactory: (dataSource: DataSource) => dataSource.getRepository(User),
+      inject: [DataSource],
     },
   ],
 })

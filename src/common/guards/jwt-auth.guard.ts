@@ -4,9 +4,9 @@ import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { JwtService } from '@nestjs/jwt';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserSession } from '../../core/auth/domain/entities/user-session.entity';
+import { User } from '../../core/users/domain/entities/user.entity';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -16,6 +16,8 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     private jwtService: JwtService,
     @Inject('UserSessionRepository')
     private readonly sessionRepository: Repository<UserSession>,
+    @Inject('UserRepository')
+    private readonly userRepository: Repository<User>,
   ) {
     super();
   }
@@ -77,8 +79,23 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       session.lastActivity = new Date();
       await this.sessionRepository.save(session);
 
-      // Adjuntar usuario al request
-      request.user = payload;
+      // Cargar usuario completo con su rol
+      const user = await this.userRepository.findOne({
+        where: { id: payload.sub, isActive: true },
+        relations: ['role'],
+      });
+
+      if (!user) {
+        throw new UnauthorizedException('Usuario no encontrado');
+      }
+
+      // Adjuntar usuario completo al request
+      request.user = {
+        userId: user.id,
+        email: user.email,
+        roleId: user.roleId,
+        role: user.role,
+      };
 
       return true;
     } catch (error) {
