@@ -29,7 +29,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly twoFactorService: TwoFactorService,
-  ) {}
+  ) { }
 
   @Public()
   @Post('login')
@@ -109,7 +109,7 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'QR generado exitosamente' })
   async generateTwoFactor(@CurrentUser() user: any) {
     const result = await this.twoFactorService.generateTwoFactorSecret(
-      user.userId,
+      user.sub,  // El ID está en 'sub', no en 'userId'
       user.email,
     );
 
@@ -140,7 +140,7 @@ export class AuthController {
     @Body() enable2FADto: Enable2FADto,
   ) {
     const enabled = await this.twoFactorService.enableTwoFactor(
-      user.userId,
+      user.sub,  // FIX: usar user.sub en lugar de user.userId
       enable2FADto.token,
     );
 
@@ -163,7 +163,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Deshabilitar 2FA' })
   @ApiResponse({ status: 200, description: '2FA deshabilitado exitosamente' })
   async disableTwoFactor(@CurrentUser() user: any) {
-    await this.twoFactorService.disableTwoFactor(user.userId);
+    await this.twoFactorService.disableTwoFactor(user.sub);  // FIX: user.sub
     return {
       success: true,
       message: '2FA deshabilitado. Tu cuenta es menos segura ahora.',
@@ -176,8 +176,8 @@ export class AuthController {
   @ApiOperation({ summary: 'Verificar estado de 2FA' })
   @ApiResponse({ status: 200, description: 'Estado de 2FA' })
   async getTwoFactorStatus(@CurrentUser() user: any) {
-    const enabled = await this.twoFactorService.isTwoFactorEnabled(user.userId);
-    const info = await this.twoFactorService.getTwoFactorInfo(user.userId);
+    const enabled = await this.twoFactorService.isTwoFactorEnabled(user.sub);  // FIX: user.sub
+    const info = await this.twoFactorService.getTwoFactorInfo(user.sub);  // FIX: user.sub
 
     return {
       enabled,
@@ -192,7 +192,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Regenerar códigos de respaldo' })
   @ApiResponse({ status: 200, description: 'Códigos regenerados exitosamente' })
   async regenerateBackupCodes(@CurrentUser() user: any) {
-    const backupCodes = await this.twoFactorService.regenerateBackupCodes(user.userId);
+    const backupCodes = await this.twoFactorService.regenerateBackupCodes(user.sub);  // FIX: user.sub
     return {
       success: true,
       message: 'Códigos de respaldo regenerados. Guárdalos en un lugar seguro.',
@@ -208,7 +208,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Obtener sesiones activas del usuario' })
   @ApiResponse({ status: 200, description: 'Lista de sesiones activas' })
   async getActiveSessions(@CurrentUser() user: any) {
-    const sessions = await this.authService.getActiveSessions(user.userId);
+    const sessions = await this.authService.getActiveSessions(user.sub);  // FIX: user.sub
     return {
       sessions: sessions.map((session) => ({
         id: session.id,
@@ -227,7 +227,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Cerrar todas las sesiones del usuario' })
   @ApiResponse({ status: 200, description: 'Todas las sesiones cerradas' })
   async logoutAllSessions(@CurrentUser() user: any) {
-    await this.authService.logoutAllSessions(user.userId);
+    await this.authService.logoutAllSessions(user.sub);  // FIX: user.sub
     return {
       success: true,
       message: 'Todas las sesiones han sido cerradas',
@@ -243,7 +243,7 @@ export class AuthController {
     @CurrentUser() user: any,
     @Param('sessionId', ParseIntPipe) sessionId: number,
   ) {
-    await this.authService.logoutSession(sessionId, user.userId);
+    await this.authService.logoutSession(sessionId, user.sub);  // FIX: user.sub
     return {
       success: true,
       message: 'Sesión cerrada exitosamente',

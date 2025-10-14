@@ -1,12 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { User } from '../../../users/domain/entities/user.entity';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity('user_two_factor')
 export class UserTwoFactor {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'user_id', unique: true })
+  @Column({ name: 'user_id' })
   userId: number;
 
   @Column({ name: 'tfa_secret' })
@@ -26,8 +25,4 @@ export class UserTwoFactor {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
-
-  @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'user_id' })
-  user: User;
 }

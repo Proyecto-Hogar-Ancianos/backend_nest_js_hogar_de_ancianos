@@ -11,7 +11,7 @@ export class TwoFactorService {
   constructor(
     @InjectRepository(UserTwoFactor)
     private readonly twoFactorRepository: Repository<UserTwoFactor>,
-  ) {}
+  ) { }
 
   /**
    * Genera un secret TOTP para un usuario
@@ -44,7 +44,7 @@ export class TwoFactorService {
     } else {
       // Crear nuevo registro
       twoFactorRecord = this.twoFactorRepository.create({
-        userId,
+        userId, // Set userId directly as column
         tfaSecret: secret.base32,
         tfaBackupCodes: JSON.stringify(backupCodes),
         tfaEnabled: false,
@@ -115,10 +115,11 @@ export class TwoFactorService {
     const verified = await this.verifyTwoFactorToken(userId, token);
 
     if (verified) {
-      await this.twoFactorRepository.update(
-        { userId },
-        { tfaEnabled: true },
-      );
+      const record = await this.twoFactorRepository.findOne({ where: { userId } });
+      if (record) {
+        record.tfaEnabled = true;
+        await this.twoFactorRepository.save(record);
+      }
       return true;
     }
 
@@ -129,10 +130,11 @@ export class TwoFactorService {
    * Deshabilita 2FA para un usuario
    */
   async disableTwoFactor(userId: number): Promise<void> {
-    await this.twoFactorRepository.update(
-      { userId },
-      { tfaEnabled: false },
-    );
+    const record = await this.twoFactorRepository.findOne({ where: { userId } });
+    if (record) {
+      record.tfaEnabled = false;
+      await this.twoFactorRepository.save(record);
+    }
   }
 
   /**
