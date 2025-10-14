@@ -96,7 +96,7 @@ export class TwoFactorService {
         );
 
         if (codeIndex !== -1) {
-          console.log('✅ Código de respaldo válido!');
+          console.log('   Código de respaldo válido!');
           // Remover el código usado
           backupCodes.splice(codeIndex, 1);
           twoFactorRecord.tfaBackupCodes = JSON.stringify(backupCodes);
@@ -140,7 +140,7 @@ export class TwoFactorService {
         window: 10, // ±5 minutos de tolerancia
       });
 
-      console.log('🎯 Resultado verificación:', verified ? '✅ VÁLIDO' : '❌ INVÁLIDO');
+      console.log('🎯 Resultado verificación:', verified ? '   VÁLIDO' : '❌ INVÁLIDO');
       console.log('==============================================');
 
       if (verified) {
