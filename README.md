@@ -9,6 +9,9 @@
 ![Status](https://img.shields.io/badge/Status-En_Desarrollo-yellow?style=for-the-badge)
 ![Created By](https://img.shields.io/badge/Creado_por-TonyML_|_Luis_|_Jona-%23ff69b4?style=for-the-badge&logo=starship&logoColor=white)
 
+> **🔐 Sistema de Autenticación Actualizado**  
+> Este proyecto incluye un flujo completo de autenticación multi-capa con JWT, 2FA/TOTP, gestión de sesiones persistentes y auditoría. Consulta la sección [Flujo de Autenticación y Seguridad](#flujo-de-autenticación-y-seguridad) para más detalles.
+
 ---
 
 ## Tabla de Contenidos
@@ -22,6 +25,7 @@
 - [Configuración](#configuración)
 - [Ejecución](#ejecución)
 - [Estructura del Proyecto](#estructura-del-proyecto)
+- [Flujo de Autenticación y Seguridad](#flujo-de-autenticación-y-seguridad)
 - [API Endpoints](#api-endpoints)
 - [Testing](#testing)
 - [Contribución](#contribución)
@@ -39,12 +43,16 @@ Este sistema reemplaza el sistema manual basado en expedientes físicos, digital
 
 ## Características Principales
 
-- **Autenticación Segura**: JWT + Autenticación de dos factores (2FA)
-- **Control de Acceso por Roles**: Super Admin, Admin, Director, Enfermero, Fisioterapeuta, Psicólogo, Trabajador Social
+- **Autenticación Segura Multi-Capa**: 
+  - JWT (Access Token + Refresh Token)
+  - Autenticación de Dos Factores (2FA/TOTP)
+  - Gestión de sesiones persistentes con auditoría
+  - Tokens con expiración configurable (15 min / 7 días)
+- **Control de Acceso por Roles (RBAC)**: Super Admin, Admin, Director, Enfermero, Fisioterapeuta, Psicólogo, Trabajador Social
 - **Gestión de Expedientes Digitales**: Creación, edición y consulta de fichas virtuales de adultos mayores
 - **Historiales Médicos Completos**: Registro de antecedentes clínicos, medicación, vacunas y condiciones
 - **Sistema de Citas Especializadas**: Programación y registro de atenciones en enfermería, fisioterapia, psicología y trabajo social
-- **Auditoría Completa**: Logs de todas las acciones con trazabilidad total
+- **Auditoría Completa**: Logs de todas las acciones con trazabilidad total (incluye intentos de login)
 - **Notificaciones por Email**: Envío automático de credenciales, recordatorios de citas y alertas
 - **Generación de Reportes PDF**: Exportación de fichas virtuales y reportes médicos
 - **Backups Automatizados**: Respaldo diario a Google Drive con retención configurable
@@ -173,13 +181,7 @@ npm run migration:run
 | `EMAIL_PASSWORD` | Contraseña de aplicación de Gmail | `xxxx xxxx xxxx xxxx` |
 | `GOOGLE_DRIVE_FOLDER_ID` | ID de carpeta de Google Drive para backups | `1AbC2DeF3GhI4JkL` |
 
-### Configuración de 2FA
-
-Para habilitar la autenticación de dos factores, los usuarios deben escanear el código QR generado en `/api/v1/auth/2fa/enable` con una aplicación como:
-
-- Google Authenticator
-- Microsoft Authenticator
-- Authy
+> **Nota**: Para información completa sobre autenticación y 2FA, consulta la sección [Flujo de Autenticación y Seguridad](#flujo-de-autenticación-y-seguridad).
 
 ---
 
@@ -623,20 +625,588 @@ backend_nest_js_hogar_de_ancianos/
 
 ---
 
+## Flujo de Autenticación y Seguridad
+
+El sistema implementa un **flujo de autenticación robusto y seguro** con múltiples capas de protección:
+
+### 🔐 Arquitectura de Seguridad
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    CAPA DE SEGURIDAD                             │
+├─────────────────────────────────────────────────────────────────┤
+│  1. JWT (Access Token + Refresh Token)                          │
+│  2. Autenticación de Dos Factores (2FA/TOTP)                   │
+│  3. Gestión de Sesiones Persistentes                            │
+│  4. Auditoría de Intentos de Login                              │
+│  5. Control de Acceso Basado en Roles (RBAC)                   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 📋 Flujo Completo de Autenticación
+
+#### **Paso 1: Login Inicial (POST /auth/login)**
+
+```typescript
+// Request
+POST /auth/login
+{
+  "email": "admin@hogar.com",
+  "password": "SecurePass123!"
+}
+
+// Response (sin 2FA habilitado)
+{
+  "requiresTwoFactor": false,
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": 1,
+    "email": "admin@hogar.com",
+    "name": "Juan Pérez García",
+    "roleId": 2
+  }
+}
+
+// Response (CON 2FA habilitado)
+{
+  "requiresTwoFactor": true,
+  "tempToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**¿Qué hace el servidor?**
+1. ✅ Busca el usuario por email
+2. ✅ Verifica que esté activo (`isActive = true`)
+3. ✅ Compara la contraseña con bcrypt
+4. ✅ Registra el intento en `login_attempts`
+5. ✅ Verifica si tiene 2FA habilitado
+   - **SIN 2FA**: Genera `accessToken` + `refreshToken` y crea sesión
+   - **CON 2FA**: Genera `tempToken` (válido 5 minutos)
+
+---
+
+#### **Paso 2: Verificación 2FA (POST /auth/verify-2fa)** *(solo si tiene 2FA)*
+
+```typescript
+// Request
+POST /auth/verify-2fa
+{
+  "sessionToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",  // tempToken del paso anterior
+  "token": "123456"  // Código de 6 dígitos de Google Authenticator / 2FAS
+}
+
+// Response
+{
+  "requiresTwoFactor": false,
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": 1,
+    "email": "admin@hogar.com",
+    "name": "Juan Pérez García",
+    "roleId": 2
+  }
+}
+```
+
+**¿Qué hace el servidor?**
+1. ✅ Verifica que el `tempToken` sea válido y no haya expirado (< 5 min)
+2. ✅ Verifica que el payload incluya `require2FA: true`
+3. ✅ Verifica el código TOTP de 6 dígitos con ventana de ±5 minutos
+4. ✅ Registra el intento en `login_attempts`
+5. ✅ Genera tokens finales y crea sesión persistente
+
+---
+
+#### **Paso 3: Tokens JWT**
+
+El sistema usa **dos tipos de tokens**:
+
+| Token | Duración | Uso |
+|-------|----------|-----|
+| **Access Token** | 15 minutos | Autenticación de requests API |
+| **Refresh Token** | 7 días | Renovar access token sin re-login |
+
+**Estructura del Access Token (JWT Payload):**
+```json
+{
+  "sub": 1,              // User ID
+  "email": "admin@hogar.com",
+  "roleId": 2,
+  "iat": 1728920445,     // Issued at
+  "exp": 1728921345      // Expires at (+15 min)
+}
+```
+
+---
+
+#### **Paso 4: Gestión de Sesiones**
+
+Cada login crea una **sesión persistente** en la base de datos:
+
+```typescript
+// Tabla: user_sessions
+{
+  id: 1,
+  userId: 1,
+  sessionToken: "sha256_hash_of_access_token",  // Hash SHA-256
+  refreshToken: "sha256_hash_of_refresh_token",
+  ipAddress: "192.168.1.100",
+  userAgent: "Mozilla/5.0...",
+  isActive: true,
+  expiresAt: "2025-10-21T15:30:00Z",  // +7 días
+  createdAt: "2025-10-14T15:30:00Z",
+  lastActivity: "2025-10-14T15:35:00Z"
+}
+```
+
+**Beneficios:**
+- 🔒 Permite invalidar sesiones específicas
+- 🔒 Permite cerrar todas las sesiones remotamente
+- 🔍 Auditoría de dispositivos activos
+- 🔍 Detección de actividad sospechosa
+
+---
+
+#### **Paso 5: Renovación de Token (POST /auth/refresh)**
+
+Cuando el **access token expira** (después de 15 min), el cliente puede renovarlo:
+
+```typescript
+// Request
+POST /auth/refresh
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+
+// Response
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."  // Nuevo token válido 15 min
+}
+```
+
+**¿Qué hace el servidor?**
+1. ✅ Verifica el `refreshToken` con JWT
+2. ✅ Busca la sesión activa en `user_sessions` por hash
+3. ✅ Verifica que no haya expirado (< 7 días)
+4. ✅ Genera nuevo `accessToken`
+5. ✅ Actualiza `lastActivity` de la sesión
+
+---
+
+#### **Paso 6: Protección de Rutas con Guards**
+
+Todas las rutas protegidas pasan por **JwtAuthGuard**:
+
+```typescript
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
+@Get('me')
+async getProfile(@CurrentUser() user: any) {
+  return user;
+}
+```
+
+**Flujo del JwtAuthGuard:**
+```
+1. Extrae token del header: Authorization: Bearer <token>
+2. Verifica JWT (firma + expiración)
+3. ❌ Si require2FA=true → Rechaza (token temporal)
+4. Busca sesión activa en user_sessions
+5. ❌ Si no existe o isActive=false → Rechaza
+6. ❌ Si expiró (expiresAt < now) → Rechaza
+7. ✅ Actualiza lastActivity
+8. ✅ Inyecta user en request.user
+```
+
+---
+
+### 🔐 Autenticación de Dos Factores (2FA/TOTP)
+
+#### **Configuración de 2FA**
+
+**Paso 1: Generar Secret (POST /auth/2fa/generate)**
+
+```typescript
+// Request (requiere estar autenticado)
+POST /auth/2fa/generate
+Authorization: Bearer <accessToken>
+
+// Response
+{
+  "message": "Escanea el código QR con tu app 2FAS",
+  "qrCode": "data:image/png;base64,iVBORw0KGgoAAAANS...",  // QR en base64
+  "secret": "K5SGG3SRO5KG4PSQG4ZXIZCTIE4E6V3W",          // Secret base32
+  "backupCodes": [
+    "8303C8A4", "A670337A", "7E1AE6E0", ...  // 10 códigos de respaldo
+  ],
+  "instructions": [...]
+}
+```
+
+**¿Qué hace el servidor?**
+1. Genera un **secret TOTP** con `speakeasy` (20 bytes = 32 caracteres base32)
+2. Genera 10 **códigos de respaldo** (8 caracteres hexadecimales cada uno)
+3. Guarda en `user_two_factor` con `tfaEnabled: false`
+4. Genera QR code con `qrcode` library
+
+**Paso 2: Escanear QR en la App**
+
+Usa una app compatible TOTP:
+- **Google Authenticator** (Android/iOS)
+- **2FAS** (Android/iOS) - Recomendado
+- **Microsoft Authenticator**
+- **Authy**
+
+**Paso 3: Habilitar 2FA (POST /auth/2fa/enable)**
+
+```typescript
+// Request
+POST /auth/2fa/enable
+Authorization: Bearer <accessToken>
+{
+  "token": "123456"  // Código actual de 6 dígitos de la app
+}
+
+// Response
+{
+  "success": true,
+  "message": "2FA habilitado exitosamente. Ahora tu cuenta está más segura."
+}
+```
+
+**¿Qué hace el servidor?**
+1. Llama a `verifyTwoFactorToken(userId, token)`
+2. Verifica el código TOTP con `window: 10` (±5 minutos de tolerancia)
+3. Si es válido, actualiza `tfaEnabled: true` en `user_two_factor`
+
+---
+
+#### **Verificación TOTP**
+
+El sistema usa el algoritmo **TOTP (Time-based One-Time Password)** definido en [RFC 6238](https://datatracker.ietf.org/doc/html/rfc6238):
+
+```
+TOTP = HOTP(K, T)
+
+Donde:
+- K = Secret compartido (base32)
+- T = (UnixTimestamp / 30)  // Período de 30 segundos
+```
+
+**Características:**
+- ✅ Códigos de **6 dígitos numéricos**
+- ✅ Cambian cada **30 segundos**
+- ✅ Ventana de tolerancia: **±5 minutos** (window: 10)
+- ✅ Sincronización basada en hora UTC
+
+**Códigos de Respaldo:**
+- ✅ **10 códigos hexadecimales** de 8 caracteres
+- ✅ Se usan **una sola vez** (se eliminan después)
+- ✅ Útiles si pierdes el teléfono
+
+---
+
+#### **Endpoints de 2FA**
+
+| Método | Endpoint | Descripción | Auth |
+|--------|----------|-------------|------|
+| POST | `/auth/2fa/generate` | Generar secret y QR | JWT |
+| POST | `/auth/2fa/enable` | Habilitar 2FA | JWT |
+| POST | `/auth/2fa/disable` | Deshabilitar 2FA | JWT |
+| GET | `/auth/2fa/status` | Ver estado de 2FA | JWT |
+| POST | `/auth/2fa/regenerate-backup-codes` | Regenerar códigos de respaldo | JWT |
+| GET | `/auth/2fa/debug` | 🐛 Ver códigos válidos actuales | JWT |
+
+⚠️ **Nota**: El endpoint `/auth/2fa/debug` es solo para depuración y debe eliminarse en producción.
+
+---
+
+### 🛡️ Control de Acceso Basado en Roles (RBAC)
+
+El sistema usa **RolesGuard** para validar permisos:
+
+```typescript
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.SuperAdmin, Role.Admin)
+@Get('users')
+async getUsers() {
+  return this.usersService.findAll();
+}
+```
+
+**Jerarquía de Roles:**
+```
+Super Admin (ID: 1)     → Acceso total al sistema
+    ↓
+Admin (ID: 2)           → Gestión de usuarios y adultos mayores
+    ↓
+Director (ID: 3)        → Supervisión general
+    ↓
+Enfermero (ID: 4)       → Atención médica y citas
+Fisioterapeuta (ID: 5)  → Sesiones de fisioterapia
+Psicólogo (ID: 6)       → Sesiones psicológicas
+Trabajador Social (ID: 7) → Informes sociales
+```
+
+---
+
+### 📊 Auditoría de Autenticación
+
+Todos los intentos de login se registran en `login_attempts`:
+
+```sql
+CREATE TABLE login_attempts (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  user_id INT NULL,
+  email VARCHAR(255) NOT NULL,
+  ip_address VARCHAR(45) NULL,
+  attempt_successful BOOLEAN DEFAULT FALSE,
+  failure_reason VARCHAR(100) NULL,  -- 'user_not_found', 'invalid_password', 'requires_2fa', 'invalid_2fa'
+  attempted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+**Razones de fallo:**
+- `user_not_found`: Email no existe
+- `user_inactive`: Usuario desactivado
+- `invalid_password`: Contraseña incorrecta
+- `requires_2fa`: Requiere verificación 2FA
+- `invalid_2fa`: Código 2FA inválido
+
+---
+
+### 🔄 Gestión de Sesiones
+
+#### **Ver Sesiones Activas (GET /auth/sessions)**
+
+```typescript
+// Response
+{
+  "sessions": [
+    {
+      "id": 1,
+      "ipAddress": "192.168.1.100",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)...",
+      "createdAt": "2025-10-14T15:30:00Z",
+      "lastActivity": "2025-10-14T18:45:00Z",
+      "expiresAt": "2025-10-21T15:30:00Z"
+    },
+    {
+      "id": 2,
+      "ipAddress": "192.168.1.150",
+      "userAgent": "PostmanRuntime/7.32.3",
+      "createdAt": "2025-10-14T16:00:00Z",
+      "lastActivity": "2025-10-14T17:00:00Z",
+      "expiresAt": "2025-10-21T16:00:00Z"
+    }
+  ]
+}
+```
+
+#### **Cerrar Sesión Actual (POST /auth/logout)**
+
+```typescript
+POST /auth/logout
+Authorization: Bearer <accessToken>
+
+// Marca isActive=false en la sesión actual
+```
+
+#### **Cerrar Todas las Sesiones (DELETE /auth/sessions/all)**
+
+```typescript
+DELETE /auth/sessions/all
+Authorization: Bearer <accessToken>
+
+// Marca isActive=false en TODAS las sesiones del usuario
+```
+
+#### **Cerrar Sesión Específica (DELETE /auth/sessions/:id)**
+
+```typescript
+DELETE /auth/sessions/15
+Authorization: Bearer <accessToken>
+
+// Marca isActive=false en la sesión ID 15
+```
+
+---
+
+### 🛠️ Troubleshooting 2FA
+
+#### **Problema: "Código 2FA inválido"**
+
+**Causas comunes:**
+1. ❌ **Desincronización de hora**: El servidor y el teléfono tienen diferente hora
+2. ❌ **Secret incorrecto**: No se escaneó el QR más reciente
+3. ❌ **Código expirado**: El código cambió mientras lo escribías (cada 30s)
+
+**Soluciones:**
+1. ✅ **Sincronizar hora automática** en el teléfono
+2. ✅ **Regenerar el QR**: `POST /auth/2fa/generate` y escanear de nuevo
+3. ✅ **Usar códigos de respaldo**: Si perdiste el teléfono
+4. ✅ **Verificar ventana de tiempo**: `GET /auth/2fa/debug` muestra códigos válidos
+
+**Ejemplo de debug:**
+```typescript
+GET /auth/2fa/debug
+Authorization: Bearer <accessToken>
+
+// Response
+{
+  "validCodes": [
+    { "offset": "-30s", "code": "360181" },
+    { "offset": "0s", "code": "039366", "isCurrent": true },  // <-- Código actual
+    { "offset": "+30s", "code": "030301" },
+    ...
+  ],
+  "serverTime": "2025-10-14T06:52:27.706Z"
+}
+```
+
+---
+
 ## API Endpoints
 
 ### Autenticación
 
 | Método | Endpoint | Descripción | Autenticación |
 |--------|----------|-------------|---------------|
-| POST | `/api/v1/auth/register` | Registrar nuevo usuario | No |
-| POST | `/api/v1/auth/login` | Iniciar sesión | No |
-| POST | `/api/v1/auth/2fa/enable` | Habilitar 2FA | Sí (JWT) |
-| POST | `/api/v1/auth/2fa/verify` | Verificar código 2FA | Sí (JWT) |
-| POST | `/api/v1/auth/refresh` | Refrescar token | Sí (Refresh Token) |
-| POST | `/api/v1/auth/logout` | Cerrar sesión | Sí (JWT) |
+| POST | `/auth/login` | Iniciar sesión | No |
+| POST | `/auth/verify-2fa` | Verificar código 2FA | No (tempToken) |
+| POST | `/auth/refresh` | Renovar access token | No (refreshToken) |
+| POST | `/auth/logout` | Cerrar sesión actual | JWT |
+| GET | `/auth/me` | Obtener perfil actual | JWT |
+| GET | `/auth/sessions` | Ver sesiones activas | JWT |
+| DELETE | `/auth/sessions/all` | Cerrar todas las sesiones | JWT |
+| DELETE | `/auth/sessions/:id` | Cerrar sesión específica | JWT |
 
-### Usuarios
+### Autenticación 2FA
+
+| Método | Endpoint | Descripción | Autenticación |
+|--------|----------|-------------|---------------|
+| POST | `/auth/2fa/generate` | Generar QR para 2FA | JWT |
+| POST | `/auth/2fa/enable` | Habilitar 2FA | JWT |
+| POST | `/auth/2fa/disable` | Deshabilitar 2FA | JWT |
+| GET | `/auth/2fa/status` | Ver estado de 2FA | JWT |
+| POST | `/auth/2fa/regenerate-backup-codes` | Regenerar códigos de respaldo | JWT |
+| GET | `/auth/2fa/debug` | 🐛 Debug de TOTP (eliminar en prod) | JWT |
+
+---
+
+### 📊 Diagrama de Flujo Completo
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         FLUJO DE AUTENTICACIÓN                           │
+└─────────────────────────────────────────────────────────────────────────┘
+
+ Usuario                    Cliente                     Servidor
+   │                          │                            │
+   │  1. Ingresa credenciales │                            │
+   ├─────────────────────────>│                            │
+   │                          │ POST /auth/login           │
+   │                          ├───────────────────────────>│
+   │                          │  { email, password }       │
+   │                          │                            │
+   │                          │                ┌───────────▼──────────┐
+   │                          │                │ Valida usuario       │
+   │                          │                │ Verifica password    │
+   │                          │                │ Busca en DB          │
+   │                          │                └───────────┬──────────┘
+   │                          │                            │
+   │                          │     ┌──────────────────────▼──────────────┐
+   │                          │     │ ¿Tiene 2FA habilitado?              │
+   │                          │     └─┬────────────────────┬──────────────┘
+   │                          │       │ NO                 │ SÍ
+   │                          │       │                    │
+   │                          │  ┌────▼─────┐      ┌──────▼────────┐
+   │                          │  │ Genera   │      │ Genera        │
+   │                          │  │ tokens   │      │ tempToken     │
+   │                          │  │ finales  │      │ (5 min)       │
+   │                          │  └────┬─────┘      └──────┬────────┘
+   │                          │       │                    │
+   │                          │<──────┴────────────────────┘
+   │                          │  Response
+   │<─────────────────────────┤  { requiresTwoFactor, token(s) }
+   │                          │
+   │ ┌────────────────────────┴─────────┐
+   │ │ SI requiresTwoFactor = false     │
+   │ │ → Guardar accessToken            │
+   │ │ → Listo para hacer requests      │
+   │ └──────────────────────────────────┘
+   │
+   │ ┌────────────────────────┬─────────┐
+   │ │ SI requiresTwoFactor = true      │
+   │ │ → Abrir app 2FA (Google Auth)    │
+   │ │ → Leer código de 6 dígitos       │
+   │ └──────────────────────────────────┘
+   │                          │
+   │  2. Ingresa código 2FA   │
+   ├─────────────────────────>│
+   │                          │ POST /auth/verify-2fa
+   │                          ├───────────────────────────>│
+   │                          │  { sessionToken, token }   │
+   │                          │                            │
+   │                          │                ┌───────────▼──────────┐
+   │                          │                │ Verifica tempToken   │
+   │                          │                │ Verifica código TOTP │
+   │                          │                │ Genera tokens finales│
+   │                          │                └───────────┬──────────┘
+   │                          │                            │
+   │                          │<───────────────────────────┘
+   │                          │  { accessToken, refreshToken }
+   │<─────────────────────────┤
+   │                          │
+   │ ✅ Autenticado           │
+   │                          │
+   │  3. Hacer requests       │
+   │  con Authorization       │
+   ├─────────────────────────>│ GET /api/resource
+   │                          ├───────────────────────────>│
+   │                          │  Header: Bearer <token>    │
+   │                          │                            │
+   │                          │                ┌───────────▼──────────┐
+   │                          │                │ JwtAuthGuard         │
+   │                          │                │ - Verifica JWT       │
+   │                          │                │ - Busca sesión activa│
+   │                          │                │ - Valida expiración  │
+   │                          │                │ - Actualiza activity │
+   │                          │                └───────────┬──────────┘
+   │                          │                            │
+   │                          │<───────────────────────────┘
+   │                          │  { data }
+   │<─────────────────────────┤
+   │                          │
+   │  4. Token expira (15min) │
+   ├─────────────────────────>│ POST /auth/refresh
+   │                          ├───────────────────────────>│
+   │                          │  { refreshToken }          │
+   │                          │                            │
+   │                          │                ┌───────────▼──────────┐
+   │                          │                │ Verifica refresh     │
+   │                          │                │ Busca sesión válida  │
+   │                          │                │ Genera nuevo access  │
+   │                          │                └───────────┬──────────┘
+   │                          │                            │
+   │                          │<───────────────────────────┘
+   │                          │  { accessToken }
+   │<─────────────────────────┤
+   │                          │
+   │ ✅ Token renovado        │
+   │                          │
+```
+
+---
+
+## API Endpoints
+
+### Autenticación
 
 | Método | Endpoint | Descripción | Rol Requerido |
 |--------|----------|-------------|---------------|
@@ -696,6 +1266,8 @@ backend_nest_js_hogar_de_ancianos/
 | GET | `/api/v1/health/database` | Estado de la BD | No |
 
 Para ver la documentación completa interactiva, visita: `http://localhost:3000/api/docs`
+
+> 📚 **Para desarrolladores**: Consulta la [Guía Técnica del Flujo de Autenticación](./AUTHENTICATION_FLOW.md) para detalles de implementación, diagramas de arquitectura y troubleshooting avanzado.
 
 ---
 
@@ -788,23 +1360,31 @@ npm run backup:restore backups/backup-2025-10-11.sql
 
 ### Medidas Implementadas
 
-- **Autenticación JWT** con expiración configurable
-- **2FA (Two-Factor Authentication)** con TOTP
-- **Bcrypt** para hashing de contraseñas (10 rounds)
+- **Autenticación JWT Multi-Token** con access token (15 min) + refresh token (7 días)
+- **2FA/TOTP** (Time-based One-Time Password) con códigos de respaldo
+- **Gestión de Sesiones Persistentes** con auditoría de dispositivos
+- **Bcrypt** para hashing de contraseñas (10 rounds de salt)
+- **Guards de Seguridad**: JwtAuthGuard, RolesGuard, TwoFactorGuard
 - **Helmet.js** para headers HTTP seguros
-- **Rate Limiting** (100 req/min por IP)
+- **Rate Limiting** (100 req/min por IP) con throttler
 - **CORS** restringido a orígenes conocidos
-- **Validación de datos** con class-validator
-- **SQL Injection Protection** mediante TypeORM
-- **Auditoría completa** de todas las acciones críticas
+- **Validación de datos** con class-validator y pipes
+- **SQL Injection Protection** mediante TypeORM y prepared statements
+- **Auditoría completa** de intentos de login y acciones críticas
 
-### Recomendaciones
+> 📖 Para más detalles sobre el flujo de autenticación, consulta [Flujo de Autenticación y Seguridad](#flujo-de-autenticación-y-seguridad).
 
-- Cambiar `JWT_SECRET` en producción con clave de 256 bits
-- Usar HTTPS en producción (certificado SSL/TLS)
-- Configurar firewall para exponer solo puertos necesarios
-- Realizar backups diarios y probar restauración regularmente
-- Mantener dependencias actualizadas (`npm audit`)
+### Recomendaciones de Producción
+
+- ✅ Cambiar `JWT_SECRET` con clave aleatoria de 256 bits
+- ✅ Usar HTTPS con certificado SSL/TLS válido
+- ✅ Configurar firewall (exponer solo 443/80)
+- ✅ Habilitar 2FA para administradores
+- ✅ Realizar backups diarios y pruebas de restauración
+- ✅ Mantener dependencias actualizadas (`npm audit fix`)
+- ✅ Eliminar endpoint `/auth/2fa/debug` en producción
+- ✅ Configurar logs centralizados (ELK, Datadog, etc.)
+- ✅ Monitorear sesiones activas y cerrar sospechosas
 
 ---
 
