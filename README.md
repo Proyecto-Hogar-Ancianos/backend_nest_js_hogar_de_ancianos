@@ -9,7 +9,7 @@
 ![Status](https://img.shields.io/badge/Status-En_Desarrollo-yellow?style=for-the-badge)
 ![Created By](https://img.shields.io/badge/Creado_por-TonyML_|_Luis_|_Jona-%23ff69b4?style=for-the-badge&logo=starship&logoColor=white)
 
-> **🔐 Sistema de Autenticación Actualizado**  
+> **SISTEMA DE AUTENTICACIÓN ACTUALIZADO**  
 > Este proyecto incluye un flujo completo de autenticación multi-capa con JWT, 2FA/TOTP, gestión de sesiones persistentes y auditoría. Consulta la sección [Flujo de Autenticación y Seguridad](#flujo-de-autenticación-y-seguridad) para más detalles.
 
 ---
@@ -629,7 +629,7 @@ backend_nest_js_hogar_de_ancianos/
 
 El sistema implementa un **flujo de autenticación robusto y seguro** con múltiples capas de protección:
 
-### 🔐 Arquitectura de Seguridad
+### Arquitectura de Seguridad
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -645,7 +645,7 @@ El sistema implementa un **flujo de autenticación robusto y seguro** con múlti
 
 ---
 
-### 📋 Flujo Completo de Autenticación
+### Flujo Completo de Autenticación
 
 #### **Paso 1: Login Inicial (POST /auth/login)**
 
@@ -764,10 +764,10 @@ Cada login crea una **sesión persistente** en la base de datos:
 ```
 
 **Beneficios:**
-- 🔒 Permite invalidar sesiones específicas
-- 🔒 Permite cerrar todas las sesiones remotamente
-- 🔍 Auditoría de dispositivos activos
-- 🔍 Detección de actividad sospechosa
+- Permite invalidar sesiones específicas
+- Permite cerrar todas las sesiones remotamente
+- Auditoría de dispositivos activos
+- Detección de actividad sospechosa
 
 ---
 
@@ -824,7 +824,7 @@ async getProfile(@CurrentUser() user: any) {
 
 ---
 
-### 🔐 Autenticación de Dos Factores (2FA/TOTP)
+### Autenticación de Dos Factores (2FA/TOTP)
 
 #### **Configuración de 2FA**
 
@@ -898,15 +898,15 @@ Donde:
 ```
 
 **Características:**
-- ✅ Códigos de **6 dígitos numéricos**
-- ✅ Cambian cada **30 segundos**
-- ✅ Ventana de tolerancia: **±5 minutos** (window: 10)
-- ✅ Sincronización basada en hora UTC
+- Códigos de **6 dígitos numéricos**
+- Cambian cada **30 segundos**
+- Ventana de tolerancia: **±5 minutos** (window: 10)
+- Sincronización basada en hora UTC
 
 **Códigos de Respaldo:**
-- ✅ **10 códigos hexadecimales** de 8 caracteres
-- ✅ Se usan **una sola vez** (se eliminan después)
-- ✅ Útiles si pierdes el teléfono
+- **10 códigos hexadecimales** de 8 caracteres
+- Se usan **una sola vez** (se eliminan después)
+- Útiles si pierdes el teléfono
 
 ---
 
@@ -919,13 +919,13 @@ Donde:
 | POST | `/auth/2fa/disable` | Deshabilitar 2FA | JWT |
 | GET | `/auth/2fa/status` | Ver estado de 2FA | JWT |
 | POST | `/auth/2fa/regenerate-backup-codes` | Regenerar códigos de respaldo | JWT |
-| GET | `/auth/2fa/debug` | 🐛 Ver códigos válidos actuales | JWT |
+| GET | `/auth/2fa/debug` | [DEBUG] Ver códigos válidos actuales | JWT |
 
-⚠️ **Nota**: El endpoint `/auth/2fa/debug` es solo para depuración y debe eliminarse en producción.
+**Nota**: El endpoint `/auth/2fa/debug` es solo para depuración y debe eliminarse en producción.
 
 ---
 
-### 🛡️ Control de Acceso Basado en Roles (RBAC)
+### Control de Acceso Basado en Roles (RBAC)
 
 El sistema usa **RolesGuard** para validar permisos:
 
@@ -955,7 +955,7 @@ Trabajador Social (ID: 7) → Informes sociales
 
 ---
 
-### 📊 Auditoría de Autenticación
+### Auditoría de Autenticación
 
 Todos los intentos de login se registran en `login_attempts`:
 
@@ -980,7 +980,7 @@ CREATE TABLE login_attempts (
 
 ---
 
-### 🔄 Gestión de Sesiones
+### Gestión de Sesiones
 
 #### **Ver Sesiones Activas (GET /auth/sessions)**
 
@@ -1037,20 +1037,20 @@ Authorization: Bearer <accessToken>
 
 ---
 
-### 🛠️ Troubleshooting 2FA
+### Troubleshooting 2FA
 
 #### **Problema: "Código 2FA inválido"**
 
 **Causas comunes:**
-1. ❌ **Desincronización de hora**: El servidor y el teléfono tienen diferente hora
-2. ❌ **Secret incorrecto**: No se escaneó el QR más reciente
-3. ❌ **Código expirado**: El código cambió mientras lo escribías (cada 30s)
+1. **Desincronización de hora**: El servidor y el teléfono tienen diferente hora
+2. **Secret incorrecto**: No se escaneó el QR más reciente
+3. **Código expirado**: El código cambió mientras lo escribías (cada 30s)
 
 **Soluciones:**
-1. ✅ **Sincronizar hora automática** en el teléfono
-2. ✅ **Regenerar el QR**: `POST /auth/2fa/generate` y escanear de nuevo
-3. ✅ **Usar códigos de respaldo**: Si perdiste el teléfono
-4. ✅ **Verificar ventana de tiempo**: `GET /auth/2fa/debug` muestra códigos válidos
+1. **Sincronizar hora automática** en el teléfono
+2. **Regenerar el QR**: `POST /auth/2fa/generate` y escanear de nuevo
+3. **Usar códigos de respaldo**: Si perdiste el teléfono
+4. **Verificar ventana de tiempo**: `GET /auth/2fa/debug` muestra códigos válidos
 
 **Ejemplo de debug:**
 ```typescript
@@ -1095,11 +1095,11 @@ Authorization: Bearer <accessToken>
 | POST | `/auth/2fa/disable` | Deshabilitar 2FA | JWT |
 | GET | `/auth/2fa/status` | Ver estado de 2FA | JWT |
 | POST | `/auth/2fa/regenerate-backup-codes` | Regenerar códigos de respaldo | JWT |
-| GET | `/auth/2fa/debug` | 🐛 Debug de TOTP (eliminar en prod) | JWT |
+| GET | `/auth/2fa/debug` | [DEBUG] Debug de TOTP (eliminar en prod) | JWT |
 
 ---
 
-### 📊 Diagrama de Flujo Completo
+### Diagrama de Flujo Completo
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -1137,14 +1137,14 @@ Authorization: Bearer <accessToken>
    │                          │
    │ ┌────────────────────────┴─────────┐
    │ │ SI requiresTwoFactor = false     │
-   │ │ → Guardar accessToken            │
-   │ │ → Listo para hacer requests      │
+   │ │ - Guardar accessToken            │
+   │ │ - Listo para hacer requests      │
    │ └──────────────────────────────────┘
    │
    │ ┌────────────────────────┬─────────┐
    │ │ SI requiresTwoFactor = true      │
-   │ │ → Abrir app 2FA (Google Auth)    │
-   │ │ → Leer código de 6 dígitos       │
+   │ │ - Abrir app 2FA (Google Auth)    │
+   │ │ - Leer código de 6 dígitos       │
    │ └──────────────────────────────────┘
    │                          │
    │  2. Ingresa código 2FA   │
@@ -1163,7 +1163,7 @@ Authorization: Bearer <accessToken>
    │                          │  { accessToken, refreshToken }
    │<─────────────────────────┤
    │                          │
-   │ ✅ Autenticado           │
+   │ [OK] Autenticado         │
    │                          │
    │  3. Hacer requests       │
    │  con Authorization       │
@@ -1198,7 +1198,7 @@ Authorization: Bearer <accessToken>
    │                          │  { accessToken }
    │<─────────────────────────┤
    │                          │
-   │ ✅ Token renovado        │
+   │ [OK] Token renovado      │
    │                          │
 ```
 
@@ -1267,7 +1267,7 @@ Authorization: Bearer <accessToken>
 
 Para ver la documentación completa interactiva, visita: `http://localhost:3000/api/docs`
 
-> 📚 **Para desarrolladores**: Consulta la [Guía Técnica del Flujo de Autenticación](./AUTHENTICATION_FLOW.md) para detalles de implementación, diagramas de arquitectura y troubleshooting avanzado.
+> **Para desarrolladores**: Consulta la [Guía Técnica del Flujo de Autenticación](./AUTHENTICATION_FLOW.md) para detalles de implementación, diagramas de arquitectura y troubleshooting avanzado.
 
 ---
 
@@ -1372,19 +1372,19 @@ npm run backup:restore backups/backup-2025-10-11.sql
 - **SQL Injection Protection** mediante TypeORM y prepared statements
 - **Auditoría completa** de intentos de login y acciones críticas
 
-> 📖 Para más detalles sobre el flujo de autenticación, consulta [Flujo de Autenticación y Seguridad](#flujo-de-autenticación-y-seguridad).
+> Para más detalles sobre el flujo de autenticación, consulta [Flujo de Autenticación y Seguridad](#flujo-de-autenticación-y-seguridad).
 
 ### Recomendaciones de Producción
 
-- ✅ Cambiar `JWT_SECRET` con clave aleatoria de 256 bits
-- ✅ Usar HTTPS con certificado SSL/TLS válido
-- ✅ Configurar firewall (exponer solo 443/80)
-- ✅ Habilitar 2FA para administradores
-- ✅ Realizar backups diarios y pruebas de restauración
-- ✅ Mantener dependencias actualizadas (`npm audit fix`)
-- ✅ Eliminar endpoint `/auth/2fa/debug` en producción
-- ✅ Configurar logs centralizados (ELK, Datadog, etc.)
-- ✅ Monitorear sesiones activas y cerrar sospechosas
+- Cambiar `JWT_SECRET` con clave aleatoria de 256 bits
+- Usar HTTPS con certificado SSL/TLS válido
+- Configurar firewall (exponer solo 443/80)
+- Habilitar 2FA para administradores
+- Realizar backups diarios y pruebas de restauración
+- Mantener dependencias actualizadas (`npm audit fix`)
+- Eliminar endpoint `/auth/2fa/debug` en producción
+- Configurar logs centralizados (ELK, Datadog, etc.)
+- Monitorear sesiones activas y cerrar sospechosas
 
 ---
 
