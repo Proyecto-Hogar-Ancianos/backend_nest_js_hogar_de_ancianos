@@ -14,6 +14,7 @@ import { RolesModule } from './core/roles/roles.module';
 import { ProgramsModule } from './core/programs/programs.module';
 import { OlderAdultsModule } from './core/older-adults/older-adults.module';
 import { ClinicalRecordsModule } from './core/clinical-records/clinical-records.module';
+import { VirtualFileModule } from './core/virtual-file/virtual-file.module';
 
 // Guards
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
@@ -34,6 +35,7 @@ import { UserSession } from './core/auth/domain/entities/user-session.entity';
     ProgramsModule,
     OlderAdultsModule,
     ClinicalRecordsModule,
+    VirtualFileModule,
   ],
   controllers: [HealthController],
   providers: [

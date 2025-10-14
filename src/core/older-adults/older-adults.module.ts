@@ -20,9 +20,9 @@ import { EmergencyContactService } from './application/services/emergency-contac
 import { OlderAdultUpdateService } from './application/services/older-adult-update.service';
 
 // Controllers
-import { OlderAdultController } from './application/controllers/older-adult.controller';
-import { OlderAdultFamilyController } from './application/controllers/older-adult-family.controller';
-import { EmergencyContactController } from './application/controllers/emergency-contact.controller';
+import { OlderAdultController } from './application/noSeUsara/older-adult.controller';
+import { OlderAdultFamilyController } from './application/noSeUsara/older-adult-family.controller';
+import { EmergencyContactController } from './application/noSeUsara/emergency-contact.controller';
 
 @Module({
   imports: [
