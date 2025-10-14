@@ -54,6 +54,11 @@ import { DataSource } from 'typeorm';
       provide: 'UserSessionRepository',
       useFactory: (dataSource: DataSource) => dataSource.getRepository(UserSession),
       inject: [DataSource],
+    },
+    {
+      provide: 'UserRepository',
+      useFactory: (dataSource: DataSource) => dataSource.getRepository(User),
+      inject: [DataSource],
     }
   ],
   exports: [
@@ -62,7 +67,8 @@ import { DataSource } from 'typeorm';
     JwtStrategy,
     JwtModule,
     PassportModule,
-    'UserSessionRepository'
+    'UserSessionRepository',
+    'UserRepository'
   ],
 })
 export class AuthModule { }
