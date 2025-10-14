@@ -200,6 +200,55 @@ export class AuthController {
     };
   }
 
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Get('2fa/debug')
+  @ApiOperation({ summary: '[DEBUG] Ver códigos TOTP válidos actuales' })
+  @ApiResponse({ status: 200, description: 'Información de debug 2FA' })
+  async debugTwoFactor(@CurrentUser() user: any) {
+    const info = await this.twoFactorService.getTwoFactorInfo(user.sub);
+
+    if (!info || !info.tfaSecret) {
+      return {
+        error: 'No tienes 2FA configurado',
+      };
+    }
+
+    const speakeasy = require('speakeasy');
+    const currentTime = Math.floor(Date.now() / 1000);
+    const currentPeriod = Math.floor(currentTime / 30);
+
+    // Generar códigos en ventana de ±5 minutos
+    const validCodes: any[] = [];
+    for (let i = -10; i <= 10; i++) {
+      const timeOffset = currentPeriod + i;
+      const token = speakeasy.totp({
+        secret: info.tfaSecret,
+        encoding: 'base32',
+        time: timeOffset * 30,
+      });
+
+      validCodes.push({
+        offset: `${i > 0 ? '+' : ''}${i * 30}s`,
+        code: token,
+        timestamp: new Date((timeOffset * 30) * 1000).toISOString(),
+        isCurrent: i === 0,
+      });
+    }
+
+    return {
+      userId: user.sub,
+      secret: info.tfaSecret,
+      enabled: info.tfaEnabled,
+      serverTime: new Date().toISOString(),
+      serverUnixTime: currentTime,
+      currentPeriod,
+      validCodes,
+      backupCodes: info.tfaBackupCodes ? JSON.parse(info.tfaBackupCodes) : [],
+      warning: '⚠️ Este endpoint es solo para depuración. Elimínalo en producción.',
+    };
+  }
+
   // ========== Gestión de Sesiones ==========
 
   @ApiBearerAuth()

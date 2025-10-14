@@ -21,11 +21,11 @@ export class TwoFactorService {
     qrCodeUrl: string;
     backupCodes: string[];
   }> {
-    // Generar secret
+    // Generar secret con longitud óptima para TOTP (20 bytes = 32 caracteres base32)
     const secret = speakeasy.generateSecret({
       name: `Hogar de Ancianos (${userEmail})`,
       issuer: 'Hogar de Ancianos',
-      length: 32,
+      length: 20, // CAMBIO: De 32 a 20 para compatibilidad óptima
     });
 
     // Generar códigos de respaldo (10 códigos)
@@ -44,7 +44,7 @@ export class TwoFactorService {
     } else {
       // Crear nuevo registro
       twoFactorRecord = this.twoFactorRepository.create({
-        userId, // Set userId directly as column
+        userId,
         tfaSecret: secret.base32,
         tfaBackupCodes: JSON.stringify(backupCodes),
         tfaEnabled: false,
@@ -72,37 +72,86 @@ export class TwoFactorService {
     });
 
     if (!twoFactorRecord) {
+      console.log('❌ [2FA] No se encontró registro 2FA para userId:', userId);
       return false;
     }
 
-    // Verificar token TOTP
-    const verified = speakeasy.totp.verify({
-      secret: twoFactorRecord.tfaSecret,
-      encoding: 'base32',
-      token,
-      window: 2, // Permite una ventana de ±2 períodos de tiempo (60 segundos)
-    });
+    // Limpiar el token: remover espacios y guiones
+    const cleanToken = token.replace(/[\s-]/g, '');
 
-    if (verified) {
-      // Actualizar última vez usado
-      twoFactorRecord.tfaLastUsed = new Date();
-      await this.twoFactorRepository.save(twoFactorRecord);
-      return true;
+    console.log('🔐 [2FA DEBUG] ==========================================');
+    console.log('👤 UserId:', userId);
+    console.log('🔑 Secret almacenado:', twoFactorRecord.tfaSecret);
+    console.log('🎫 Token recibido (limpio):', cleanToken);
+    console.log('🕐 Hora del servidor:', new Date().toISOString());
+    console.log('🕐 Unix timestamp:', Math.floor(Date.now() / 1000));
+
+    // Verificar si es un código de respaldo primero (formato: XXXXXXXX)
+    if (cleanToken.length === 8 && /^[0-9A-F]+$/i.test(cleanToken)) {
+      console.log('🔄 Intentando verificar como código de respaldo...');
+      if (twoFactorRecord.tfaBackupCodes) {
+        const backupCodes = JSON.parse(twoFactorRecord.tfaBackupCodes) as string[];
+        const codeIndex = backupCodes.findIndex(
+          code => code.toUpperCase() === cleanToken.toUpperCase()
+        );
+
+        if (codeIndex !== -1) {
+          console.log('✅ Código de respaldo válido!');
+          // Remover el código usado
+          backupCodes.splice(codeIndex, 1);
+          twoFactorRecord.tfaBackupCodes = JSON.stringify(backupCodes);
+          twoFactorRecord.tfaLastUsed = new Date();
+          await this.twoFactorRepository.save(twoFactorRecord);
+          return true;
+        } else {
+          console.log('❌ Código de respaldo no encontrado en la lista');
+        }
+      }
     }
 
-    // Si el token TOTP no funciona, verificar códigos de respaldo
-    if (twoFactorRecord.tfaBackupCodes) {
-      const backupCodes = JSON.parse(twoFactorRecord.tfaBackupCodes) as string[];
-      const codeIndex = backupCodes.indexOf(token);
+    // Verificar token TOTP (debe ser exactamente 6 dígitos)
+    if (cleanToken.length === 6 && /^\d{6}$/.test(cleanToken)) {
+      console.log('🔄 Intentando verificar como token TOTP...');
 
-      if (codeIndex !== -1) {
-        // Remover el código usado
-        backupCodes.splice(codeIndex, 1);
-        twoFactorRecord.tfaBackupCodes = JSON.stringify(backupCodes);
+      // Generar códigos válidos actuales para debug
+      const currentToken = speakeasy.totp({
+        secret: twoFactorRecord.tfaSecret,
+        encoding: 'base32',
+      });
+      console.log('📱 Token ACTUAL esperado:', currentToken);
+
+      // Generar tokens en ventana de tiempo (±10 períodos = ±5 minutos)
+      console.log('🕐 Tokens válidos en ventana de tiempo:');
+      for (let i = -10; i <= 10; i++) {
+        const timeOffset = Math.floor(Date.now() / 1000 / 30) + i;
+        const testToken = speakeasy.totp({
+          secret: twoFactorRecord.tfaSecret,
+          encoding: 'base32',
+          time: timeOffset * 30,
+        });
+        console.log(`  [${i > 0 ? '+' : ''}${i * 30}s] ${testToken}`);
+      }
+
+      // Verificar con ventana ampliada de 10 (±5 minutos)
+      const verified = speakeasy.totp.verify({
+        secret: twoFactorRecord.tfaSecret,
+        encoding: 'base32',
+        token: cleanToken,
+        window: 10, // ±5 minutos de tolerancia
+      });
+
+      console.log('🎯 Resultado verificación:', verified ? '✅ VÁLIDO' : '❌ INVÁLIDO');
+      console.log('==============================================');
+
+      if (verified) {
+        // Actualizar última vez usado
         twoFactorRecord.tfaLastUsed = new Date();
         await this.twoFactorRepository.save(twoFactorRecord);
         return true;
       }
+    } else {
+      console.log('❌ Token no tiene formato válido (debe ser 6 dígitos numéricos o 8 hex)');
+      console.log('==============================================');
     }
 
     return false;
@@ -163,7 +212,7 @@ export class TwoFactorService {
   private generateBackupCodes(count: number): string[] {
     const codes: string[] = [];
     for (let i = 0; i < count; i++) {
-      // Generar código de 8 caracteres alfanuméricos
+      // Generar código de 8 caracteres hexadecimales
       const code = crypto.randomBytes(4).toString('hex').toUpperCase();
       codes.push(code);
     }
