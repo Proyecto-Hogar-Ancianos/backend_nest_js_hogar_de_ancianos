@@ -23,7 +23,7 @@ import {
     EmergencyContact 
 } from './domain/virtual-records';
 import { Notification, NotificationAttachment } from './domain/notifications';
-import { SpecializedArea, SpecializedAppointment, NursingRecord } from './domain/nursing';
+import { SpecializedArea, SpecializedAppointment, NursingRecord, PhysiotherapySession, PsychologySession, MedicalRecord, SocialWorkReport } from './domain/nursing';
 
 export const databaseProviders = [
     {
@@ -65,6 +65,10 @@ export const databaseProviders = [
                     SpecializedArea,
                     SpecializedAppointment,
                     NursingRecord,
+                    PhysiotherapySession,
+                    PsychologySession,
+                    MedicalRecord,
+                    SocialWorkReport,
                 ],
                 synchronize: false,
                 logging: process.env.NODE_ENV === 'development',

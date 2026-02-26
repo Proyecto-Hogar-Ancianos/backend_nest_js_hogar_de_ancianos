@@ -25,6 +25,7 @@ import { OlderAdultUpdatesModule } from './ucr/ac/cr/ie/older-adult-updates.modu
 import { SpecializedAppointmentsModule } from './ucr/ac/cr/ie/specialized-appointments.module';
 import { SpecializedAreasModule } from './ucr/ac/cr/ie/specialized-areas.module';
 import { JwtAuthGuard } from './ucr/ac/cr/ie/common/guards/jwt-auth.guard';
+import { HealthModule } from './ucr/ac/cr/ie/modules/health/health.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { JwtAuthGuard } from './ucr/ac/cr/ie/common/guards/jwt-auth.guard';
     OlderAdultUpdatesModule,
     SpecializedAppointmentsModule,
     SpecializedAreasModule,
+    HealthModule,
   ],
   providers: [
     {
