@@ -18,6 +18,12 @@ import { AuditLogsModule } from './ucr/ac/cr/ie/modules/audit-logs/audit-logs.mo
 import { AuditReportsModule } from './ucr/ac/cr/ie/modules/audit-reports/audit-reports.module';
 import { SecurityAuditModule } from './ucr/ac/cr/ie/modules/security-audit/security-audit.module';
 import { NursingModule } from './ucr/ac/cr/ie/nursing.module';
+import { ClinicalMedicationModule } from './ucr/ac/cr/ie/clinical-medication.module';
+import { EmergencyContactsModule } from './ucr/ac/cr/ie/emergency-contacts.module';
+import { OlderAdultFamilyModule } from './ucr/ac/cr/ie/older-adult-family.module';
+import { OlderAdultUpdatesModule } from './ucr/ac/cr/ie/older-adult-updates.module';
+import { SpecializedAppointmentsModule } from './ucr/ac/cr/ie/specialized-appointments.module';
+import { SpecializedAreasModule } from './ucr/ac/cr/ie/specialized-areas.module';
 import { JwtAuthGuard } from './ucr/ac/cr/ie/common/guards/jwt-auth.guard';
 
 @Module({
@@ -42,6 +48,12 @@ import { JwtAuthGuard } from './ucr/ac/cr/ie/common/guards/jwt-auth.guard';
     AuditReportsModule,
     SecurityAuditModule,
     NursingModule,
+    ClinicalMedicationModule,
+    EmergencyContactsModule,
+    OlderAdultFamilyModule,
+    OlderAdultUpdatesModule,
+    SpecializedAppointmentsModule,
+    SpecializedAreasModule,
   ],
   providers: [
     {

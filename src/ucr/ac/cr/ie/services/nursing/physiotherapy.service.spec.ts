@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { PhysiotherapyService } from '../../../src/ucr/ac/cr/ie/services/nursing/physiotherapy.service';
-import { PhysiotherapySession } from '../../../src/ucr/ac/cr/ie/domain/nursing';
-import { SpecializedAppointment } from '../../../src/ucr/ac/cr/ie/domain/nursing';
+import { PhysiotherapyService } from './physiotherapy.service';
+import { PhysiotherapySession } from '../../domain/nursing';
+import { SpecializedAppointment } from '../../domain/nursing';
 
 describe('PhysiotherapyService', () => {
   let service: PhysiotherapyService;
@@ -58,7 +58,7 @@ describe('PhysiotherapyService', () => {
         ps_type: 'therapy',
         ps_mobility_level: 'moderate',
         id_appointment: 1,
-      };
+      } as any;
 
       const mockAppointment = {
         id: 1,
@@ -78,7 +78,7 @@ describe('PhysiotherapyService', () => {
     });
 
     it('should throw error if appointment not found', async () => {
-      const dto = { id_appointment: 1 };
+      const dto = { id_appointment: 1 } as any;
 
       mockAppointmentRepository.findOne.mockResolvedValue(null);
 
@@ -86,7 +86,7 @@ describe('PhysiotherapyService', () => {
     });
 
     it('should throw error if appointment does not belong to physiotherapy', async () => {
-      const dto = { id_appointment: 1 };
+      const dto = { id_appointment: 1 } as any;
       const mockAppointment = {
         id: 1,
         area: { saName: 'nursing' },
@@ -137,7 +137,7 @@ describe('PhysiotherapyService', () => {
 
   describe('updatePhysiotherapySession', () => {
     it('should update a physiotherapy session', async () => {
-      const dto = { ps_type: 'follow_up' };
+      const dto = { ps_type: 'follow_up' } as any;
       const mockSession = { id: 1 };
       const updatedSession = { id: 1, ps_type: 'follow_up' };
 
