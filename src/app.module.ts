@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_GUARD } from '@nestjs/core';
 import { DatabaseModule } from './ucr/ac/cr/ie/database.module';
 import { AuthModule } from './ucr/ac/cr/ie/auth.module';
@@ -17,6 +18,8 @@ import { RoleChangesModule } from './ucr/ac/cr/ie/role-changes.module';
 import { AuditLogsModule } from './ucr/ac/cr/ie/modules/audit-logs/audit-logs.module';
 import { AuditReportsModule } from './ucr/ac/cr/ie/modules/audit-reports/audit-reports.module';
 import { SecurityAuditModule } from './ucr/ac/cr/ie/modules/security-audit/security-audit.module';
+import { ActivityLogsModule } from './ucr/ac/cr/ie/modules/activity-logs/activity-logs.module';
+import { SystemAuditModule } from './ucr/ac/cr/ie/modules/system-audit/system-audit.module';
 import { NursingModule } from './ucr/ac/cr/ie/nursing.module';
 import { ClinicalMedicationModule } from './ucr/ac/cr/ie/clinical-medication.module';
 import { EmergencyContactsModule } from './ucr/ac/cr/ie/emergency-contacts.module';
@@ -26,11 +29,23 @@ import { SpecializedAppointmentsModule } from './ucr/ac/cr/ie/specialized-appoin
 import { SpecializedAreasModule } from './ucr/ac/cr/ie/specialized-areas.module';
 import { JwtAuthGuard } from './ucr/ac/cr/ie/common/guards/jwt-auth.guard';
 import { HealthModule } from './ucr/ac/cr/ie/modules/health/health.module';
+import { ActivityLog } from './ucr/ac/cr/ie/domain/activity-logs/activity-log.entity';
+import { SystemEvent } from './ucr/ac/cr/ie/domain/system-audit/system-event.entity';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+    }),
+    TypeOrmModule.forRoot({
+      type: 'mysql',
+      host: process.env.DB_HOST,
+      port: parseInt(process.env.DB_PORT || '3306'),
+      username: process.env.DB_USERNAME,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
+      entities: [ActivityLog, SystemEvent],
+      synchronize: false,
     }),
     DatabaseModule,
     AuthModule,
@@ -48,6 +63,8 @@ import { HealthModule } from './ucr/ac/cr/ie/modules/health/health.module';
     AuditLogsModule,
     AuditReportsModule,
     SecurityAuditModule,
+    ActivityLogsModule,
+    SystemAuditModule,
     NursingModule,
     ClinicalMedicationModule,
     EmergencyContactsModule,

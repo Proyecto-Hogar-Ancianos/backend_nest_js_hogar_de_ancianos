@@ -24,6 +24,7 @@ import {
 } from './domain/virtual-records';
 import { Notification, NotificationAttachment } from './domain/notifications';
 import { SpecializedArea, SpecializedAppointment, NursingRecord, PhysiotherapySession, PsychologySession, MedicalRecord, SocialWorkReport } from './domain/nursing';
+import { SecurityEvent } from './domain/security-audit';
 
 export const databaseProviders = [
     {
@@ -69,6 +70,7 @@ export const databaseProviders = [
                     PsychologySession,
                     MedicalRecord,
                     SocialWorkReport,
+                    SecurityEvent,
                 ],
                 synchronize: false,
                 logging: process.env.NODE_ENV === 'development',
