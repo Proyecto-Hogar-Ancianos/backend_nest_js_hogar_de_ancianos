@@ -295,14 +295,14 @@ export class SystemAuditRepository {
     // Por hora
     const byHour = await this.systemEventRepository
       .createQueryBuilder('event')
-      .select("DATE_TRUNC('hour', event.createdAt)", 'hour')
+      .select("DATE_FORMAT(event.createdAt, '%Y-%m-%d %H:00:00')", 'hour')
       .addSelect('COUNT(*)', 'requestCount')
       .addSelect('AVG(event.executionTimeMs)', 'avgResponseTime')
       .addSelect('(SUM(CASE WHEN event.severity = :error THEN 1 ELSE 0 END) * 100.0 / COUNT(*))', 'errorRate')
       .where(where)
       .setParameters({ error: SystemSeverity.ERROR })
-      .groupBy("DATE_TRUNC('hour', event.createdAt)")
-      .orderBy("DATE_TRUNC('hour', event.createdAt)", 'ASC')
+      .groupBy("DATE_FORMAT(event.createdAt, '%Y-%m-%d %H:00:00')")
+      .orderBy("DATE_FORMAT(event.createdAt, '%Y-%m-%d %H:00:00')", 'ASC')
       .getRawMany();
 
     const byHourFormatted = byHour.map(item => ({
